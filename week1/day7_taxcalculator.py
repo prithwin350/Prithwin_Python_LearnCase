@@ -41,6 +41,8 @@ def calculator():
                 continue
             tax_amount = calculate_tax(salary, tax)
             take_home_salary = calculate_take_home_salary(salary, tax_amount)
+            print(f"Salary: {salary}")
+            print(f"Tax Amount: {tax_amount}")
             print(f"Take Home Salary: {take_home_salary}")
 
         elif choice == "3":

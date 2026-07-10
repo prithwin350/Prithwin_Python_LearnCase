@@ -13,6 +13,10 @@ def display_menu():
     print("4. Exit")
     print("====================================")
 
+def get_salary_and_tax():
+    salary = float(input("Enter salary: "))
+    tax = float(input("Enter tax percentage: "))
+    return salary, tax
 
 def calculator():
     while True:
@@ -22,8 +26,7 @@ def calculator():
 
         if choice == "1":
             try:
-                salary = float(input("Enter salary: "))
-                tax = float(input("Enter tax percentage: "))
+                salary, tax = get_salary_and_tax()
             except ValueError:
                 print("Invalid input. Please enter numeric values only.")
                 continue
@@ -32,8 +35,7 @@ def calculator():
 
         elif choice == "2":
             try:
-                salary = float(input("Enter salary: "))
-                tax = float(input("Enter tax percentage: "))
+                salary, tax = get_salary_and_tax()
             except ValueError:
                 print("Invalid input. Please enter numeric values only.")
                 continue
@@ -43,8 +45,7 @@ def calculator():
 
         elif choice == "3":
             try:
-                salary = float(input("Enter salary: "))
-                tax = float(input("Enter tax percentage: "))
+                salary, tax = get_salary_and_tax()
             except ValueError:
                 print("Invalid input. Please enter numeric values only.")
                 continue

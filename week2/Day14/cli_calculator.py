@@ -1,20 +1,25 @@
 import argparse
 
+
 def add(num1,num2):
     process=num1+num2
     return process
+
 
 def subtract(num1,num2):
     process=num1-num2
     return process
 
+
 def multiply(num1,num2):
     process=num1*num2
     return process
 
+
 def divide(num1,num2):
     process=num1/num2
     return process
+
 
 def main():
     operations = {

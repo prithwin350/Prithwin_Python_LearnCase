@@ -1,0 +1,12 @@
+{
+    "application": {
+        "name": "Digital Banking CLI",
+        "subtitle": "A simple command-line banking simulator",
+        "version": "1.0.0"
+    },
+    "bank": {
+        "name": "Python National Bank",
+        "currency": "INR",
+        "minimum_deposit": 1000
+    }
+}

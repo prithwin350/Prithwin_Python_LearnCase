@@ -3,66 +3,7 @@ from config.environment import load_environment
 from utils.validator import validate
 from utils.logger import logger
 
-
-
-class BankAccount:
-    total_accounts = 0
-    accounts = {}
-    def __init__(self, account_number, account_holder, balance=0):
-        self.account_number = account_number
-        self.account_holder = account_holder
-        self._balance = balance
-
-        BankAccount.accounts[self.account_number] = self
-        BankAccount.total_accounts += 1
-
-    def __str__(self):
-        return (
-            f"Account Number : {self.account_number}\n"
-            f"Account Holder : {self.account_holder}\n"
-            f"Balance        : ₹{self._balance}"
-        )
-
-    
-    @staticmethod
-    def is_valid_amount(amount):
-        if amount <= 0:
-            print("Amount must be greater than zero.")
-            return False
-
-        return True
-
-    
-    def deposit(self, amount):
-        if not BankAccount.is_valid_amount(amount):
-            return False
-
-        self._balance += amount
-        return True
-
-
-    def withdraw(self, amount):
-        if not BankAccount.is_valid_amount(amount):
-            return False
-
-        if amount > self._balance:
-            print("Insufficient balance.")
-            return False
-
-        self._balance -= amount
-        return True
-
-    def check_balance(self):
-        return self._balance
-
-    @classmethod
-    def get_total_accounts(cls):
-        return cls.total_accounts
-
-    @classmethod
-    def find_account(cls, account_number):
-        return cls.accounts.get(account_number)
-
+from services import Customer, BankAccount, SavingsAccount, CurrentAccount
 
 def get_input(prompt, data_type=str):
     while True:
@@ -115,14 +56,35 @@ def application(config):
             case "1":
                 print("Creating a new account...")
 
-                account_number = get_input("Enter your account number: ")
-                account_holder = get_input("Enter your name: ")
+                account_number = BankAccount.generate_account_number()
+                customer_name = get_input("Enter your name: ")
+                customer_phone = get_input("Enter your phone number: ")
+
+                customer = Customer(customer_name, customer_phone)
+                
                 initial_balance = get_input("Enter the initial balance: ", float)
 
-                account = BankAccount(account_number, account_holder, initial_balance)
+                account_type = get_input("Enter account type (savings/current): ").lower()
 
+                try:
+                    if account_type == "savings":
+                        account = SavingsAccount(account_number, customer, initial_balance)
+
+                    elif account_type == "current":
+                        account = CurrentAccount(account_number, customer, initial_balance)
+
+                    else:
+                        print("Invalid account type.")
+                        continue
+
+                except ValueError as e:
+                    print(e)
+                    continue
+
+                BankAccount.save_accounts()
                 print("Account created successfully!")
                 print(account)
+                
 
                 for account_number, account in BankAccount.accounts.items():
                     print(account_number)
@@ -137,6 +99,7 @@ def application(config):
                 amount = get_input("Enter amount to deposit: ", float)
 
                 if account.deposit(amount):
+                    BankAccount.save_accounts()
                     print("Deposit successful!")
                     print(account)
 
@@ -149,6 +112,7 @@ def application(config):
                 amount = get_input("Enter amount to withdraw: ", float)
 
                 if account.withdraw(amount):
+                    BankAccount.save_accounts()
                     print("Withdrawal successful!")
                     print(account)
 
@@ -174,6 +138,8 @@ def main():
     logger.info("Application Started")
     config = load_settings()
     environment = load_environment()
+
+    BankAccount.load_accounts() 
 
     if not validate(config, environment):
         return

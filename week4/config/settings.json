@@ -1,0 +1,6 @@
+{
+    "application_name": "DEIENAMI Company Manager",
+    "version": "1.0.0",
+    "database_name": "company.db",
+    "page_size": 10
+}

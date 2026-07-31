@@ -15,6 +15,7 @@ class Students(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     value: Mapped[int]
+    age: Mapped[int]
 
 def add_student(name,value):
     print("adding students")

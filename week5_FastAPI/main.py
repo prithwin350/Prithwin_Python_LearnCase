@@ -4,7 +4,7 @@ app = FastAPI()
 
 
 @app.get("/")
-def home():
+def main():
     return {"message": "Hello World"}
 
 
@@ -12,6 +12,16 @@ def home():
 def about():
     return {"message": "This is the about page."}
 
+@app.get("/calculator")
+def calculator(a: int, b: int):
+    return {
+        "a": a,
+        "b": b,
+        "sum": a + b,
+        "difference": a - b,
+        "product": a * b,
+        "division": a / b
+    }
 
 @app.post("/users")
 def create_user():

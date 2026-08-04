@@ -1,10 +1,14 @@
 from fastapi import FastAPI
+import uvicorn
+from config.settings import APP_NAME, HOST, PORT, DEBUG
+from database.database import engine, Base, create_db
+from schemas.task import TaskBase
 
 app = FastAPI()
 
 
 @app.get("/")
-def main():
+def home():
     return {"message": "Hello World"}
 
 
@@ -27,7 +31,26 @@ def calculator(a: int, b: int):
 def create_user():
     return {"message": "User created."}
 
+@app.post("/tasks")
+def create_task(task: TaskBase):
 
-@app.get("/users/{user_id}")
-def get_user(user_id: int):
-    return {"user_id": user_id}
+    return {
+        "message": "Task received",
+        "task": task
+    }
+
+
+def main():
+    print(f"Starting {APP_NAME}...")
+    create_db()
+
+    uvicorn.run(
+        "main:app",
+        host=HOST,
+        port=PORT,
+        reload=DEBUG
+    )
+
+
+if __name__ == "__main__":
+    main()

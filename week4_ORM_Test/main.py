@@ -17,6 +17,7 @@ class Students(Base):
     value: Mapped[int]
     age: Mapped[int]
 
+
 def add_student(name,value):
     print("adding students")
     session=Session()

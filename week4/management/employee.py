@@ -1,128 +1,152 @@
-from config.database import get_connection
-from management.department import check_department
+from config.database import Session
+from models import Employee, Department
 
 
 def check_employee(employee_id):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        SELECT id
-        FROM employees
-        WHERE id = ?
-    """, (employee_id,))
+    try:
+        employee = session.get(Employee, employee_id)
 
-    employee = cursor.fetchone()
+        return employee.id if employee else None
 
-    connection.close()
-
-    return employee[0] if employee else None
+    finally:
+        session.close()
 
 
 def add_employee(name, department_name, email):
+    session = Session()
 
-    department_id = check_department(department_name)
+    try:
+        department = (
+            session.query(Department)
+            .filter(Department.name == department_name)
+            .first()
+        )
 
-    if department_id is None:
+        if department is None:
+            return False
+
+        employee = Employee(
+            name=name,
+            department_id=department.id,
+            email=email
+        )
+
+        session.add(employee)
+        session.commit()
+
+        return True
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
-    connection = get_connection()
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        INSERT INTO employees (name, department_id, email)
-        VALUES (?, ?, ?)
-    """, (name, department_id, email))
-
-    connection.commit()
-    connection.close()
-
-    return True
+    finally:
+        session.close()
 
 
 def view_employees():
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-    SELECT
-        employees.id,
-        employees.name,
-        departments.name AS department,
-        employees.email
-    FROM employees
-    JOIN departments
-    ON employees.department_id = departments.id
-    ORDER BY employees.id ASC
-    """)
+    try:
+        employees = (
+            session.query(Employee)
+            .join(Department)
+            .all()
+        )
 
-    employees = cursor.fetchall()
+        return [
+            (
+                employee.id,
+                employee.name,
+                employee.department.name,
+                employee.email
+            )
+            for employee in employees
+        ]
 
-    connection.close()
-
-    return employees
+    finally:
+        session.close()
 
 
 def update_employee(employee_id, name, email):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        UPDATE employees
-        SET name = ?,
-            email = ?
-        WHERE id = ?
-    """, (name, email, employee_id))
+    try:
+        employee = session.get(Employee, employee_id)
 
-    connection.commit()
+        if employee is None:
+            return False
 
-    updated = cursor.rowcount > 0
+        employee.name = name
+        employee.email = email
 
-    connection.close()
+        session.commit()
 
-    return updated
+        return True
+
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return False
+
+    finally:
+        session.close()
 
 
 def change_employee_department(employee_id, department_name):
+    session = Session()
 
-    department_id = check_department(department_name)
+    try:
+        department = (
+            session.query(Department)
+            .filter(Department.name == department_name)
+            .first()
+        )
 
-    if department_id is None:
+        if department is None:
+            return False
+
+        employee = session.get(Employee, employee_id)
+
+        if employee is None:
+            return False
+
+        employee.department_id = department.id
+
+        session.commit()
+
+        return True
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
-    connection = get_connection()
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        UPDATE employees
-        SET department_id = ?
-        WHERE id = ?
-    """, (department_id, employee_id))
-
-    connection.commit()
-
-    updated = cursor.rowcount > 0
-
-    connection.close()
-
-    return updated
+    finally:
+        session.close()
 
 
 def delete_employee(employee_id):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        DELETE FROM employees
-        WHERE id = ?
-    """, (employee_id,))
+    try:
+        employee = session.get(Employee, employee_id)
 
-    connection.commit()
+        if employee is None:
+            return False
 
-    deleted = cursor.rowcount > 0
+        session.delete(employee)
+        session.commit()
 
-    connection.close()
+        return True
 
-    return deleted
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return False
 
-
+    finally:
+        session.close()

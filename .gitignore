@@ -1,3 +1,36 @@
+# =========================
+# Python
+# =========================
+
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+
+# Environment Variables
+.env
+
+# Testing
+.pytest_cache/
+
+# Type Checking
+.mypy_cache/
+
+# Linting
+.ruff_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# =========================
+# Your Existing Rules
+# =========================
+
 __pycache__/
 *.pyc
 

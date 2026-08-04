@@ -1,187 +1,183 @@
-from config.database import get_connection
-from management.employee import check_employee
+from config.database import Session
+from models import Task, Employee
 
 
 def check_task(task_id):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        SELECT id
-        FROM tasks
-        WHERE id = ?
-    """, (task_id,))
+    try:
+        task = session.get(Task, task_id)
 
-    task = cursor.fetchone()
+        return task.id if task else None
 
-    connection.close()
-
-    return task[0] if task else None
+    finally:
+        session.close()
 
 
 def add_task(title, description, employee_id):
 
-    if check_employee(employee_id) is None:
-        return False
-
-    connection = get_connection()
+    session = Session()
 
     try:
-        cursor = connection.cursor()
+        employee = session.get(Employee, employee_id)
 
-        cursor.execute("""
-            INSERT INTO tasks (
-                title,
-                description,
-                status,
-                employee_id
-            )
-            VALUES (?, ?, ?, ?)
-        """, (
-            title,
-            description,
-            "Pending",
-            employee_id
-        ))
+        if employee is None:
+            return False
 
-        connection.commit()
+        task = Task(
+            title=title,
+            description=description,
+            status="Pending",
+            employee_id=employee_id
+        )
+
+        session.add(task)
+        session.commit()
 
         return True
 
-    except Exception:
-        connection.rollback()
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
     finally:
-        connection.close()
-
+        session.close()
 
 
 def view_tasks():
-    connection = get_connection()
+
+    session = Session()
 
     try:
-        cursor = connection.cursor()
+        tasks = (
+            session.query(Task)
+            .join(Employee)
+            .order_by(Task.id.asc())
+            .all()
+        )
 
-        cursor.execute("""
-            SELECT
-                tasks.id,
-                tasks.title,
-                tasks.description,
-                employees.name AS employee,
-                tasks.status
-            FROM tasks
-            JOIN employees
-            ON tasks.employee_id = employees.id
-            ORDER BY tasks.id ASC
-        """)
-
-        return cursor.fetchall()
+        return [
+            (
+                task.id,
+                task.title,
+                task.description,
+                task.employee.name,
+                task.status
+            )
+            for task in tasks
+        ]
 
     finally:
-        connection.close()
+        session.close()
 
 
 def update_task(task_id, field, value):
 
-    if check_task(task_id) is None:
-        return False
-
-    allowed_fields = {
-        "title",
-        "description",
-        "employee_id"
-    }
-
-    if field not in allowed_fields:
-        return False
-
-    if field == "employee_id":
-        if check_employee(value) is None:
-            return False
-
-    connection = get_connection()
+    session = Session()
 
     try:
-        cursor = connection.cursor()
+        task = session.get(Task, task_id)
 
-        cursor.execute(f"""
-            UPDATE tasks
-            SET {field} = ?
-            WHERE id = ?
-        """, (value, task_id))
+        if task is None:
+            return False
 
-        connection.commit()
 
-        return cursor.rowcount > 0
+        allowed_fields = {
+            "title",
+            "description",
+            "employee_id"
+        }
 
-    except Exception:
-        connection.rollback()
+        if field not in allowed_fields:
+            return False
+
+
+        if field == "employee_id":
+
+            employee = session.get(Employee, value)
+
+            if employee is None:
+                return False
+
+
+        setattr(task, field, value)
+
+        session.commit()
+
+        return True
+
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
     finally:
-        connection.close()
+        session.close()
+
 
 
 def change_task_status(task_id, status):
 
-    if check_task(task_id) is None:
-        return False
-
-    allowed_statuses = {
-        "Pending",
-        "In Progress",
-        "Completed"
-    }
-
-    if status not in allowed_statuses:
-        return False
-
-    connection = get_connection()
+    session = Session()
 
     try:
-        cursor = connection.cursor()
+        task = session.get(Task, task_id)
 
-        cursor.execute("""
-            UPDATE tasks
-            SET status = ?
-            WHERE id = ?
-        """, (status, task_id))
+        if task is None:
+            return False
 
-        connection.commit()
 
-        return cursor.rowcount > 0
+        allowed_statuses = {
+            "Pending",
+            "In Progress",
+            "Completed"
+        }
 
-    except Exception:
-        connection.rollback()
+
+        if status not in allowed_statuses:
+            return False
+
+
+        task.status = status
+
+        session.commit()
+
+        return True
+
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
     finally:
-        connection.close()
+        session.close()
+
 
 
 def delete_task(task_id):
 
-    if check_task(task_id) is None:
-        return False
-
-    connection = get_connection()
+    session = Session()
 
     try:
-        cursor = connection.cursor()
+        task = session.get(Task, task_id)
 
-        cursor.execute("""
-            DELETE FROM tasks
-            WHERE id = ?
-        """, (task_id,))
+        if task is None:
+            return False
 
-        connection.commit()
 
-        return cursor.rowcount > 0
+        session.delete(task)
+        session.commit()
 
-    except Exception:
-        connection.rollback()
+        return True
+
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
     finally:
-        connection.close()
+        session.close()

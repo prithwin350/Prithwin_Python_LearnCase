@@ -1,5 +1,4 @@
-from config.database import check_connection
-from database.migrations import create_tables
+from config.database import check_connection, engine, Base
 from ui.menu import ui
 
 
@@ -12,8 +11,8 @@ def application():
         print("Database connection failed.")
         return
 
-    create_tables()
-    print("Employee table ready.")
+    Base.metadata.create_all(engine)
+    print("Database ready.")
 
     ui()
 

@@ -1,92 +1,118 @@
-from config.database import get_connection
+from config.database import Session
+from models import Department
+
 
 def check_department(name):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        SELECT id
-        FROM departments
-        WHERE LOWER(name) = LOWER(?)
-    """, (name,))
+    try:
+        department = (
+            session.query(Department)
+            .filter(Department.name.ilike(name))
+            .first()
+        )
 
-    department = cursor.fetchone()
+        return department.id if department else None
 
-    connection.close()
-
-    if department:
-        return department[0]
-
-    return None
+    finally:
+        session.close()
 
 
 def add_department(name):
-    if check_department(name) is not None:
+    session = Session()
+
+    try:
+        if check_department(name) is not None:
+            return False
+
+        department = Department(
+            name=name
+        )
+
+        session.add(department)
+        session.commit()
+
+        return True
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         return False
 
-    connection = get_connection()
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        INSERT INTO departments (name)
-        VALUES (?)
-    """, (name,))
-
-    connection.commit()
-    connection.close()
-
-    return True
+    finally:
+        session.close()
 
 
 def view_departments():
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        SELECT *
-        FROM departments
-        ORDER BY id ASC
-    """)
+    try:
+        departments = (
+            session.query(Department)
+            .order_by(Department.id.asc())
+            .all()
+        )
 
-    departments = cursor.fetchall()
+        return [
+            (
+                department.id,
+                department.name
+            )
+            for department in departments
+        ]
 
-    connection.close()
-
-    return departments
+    finally:
+        session.close()
 
 
 def update_department(department_id, name):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        UPDATE departments
-        SET name = ?
-        WHERE id = ?
-    """, (name, department_id))
+    try:
+        department = session.get(
+            Department,
+            department_id
+        )
 
-    connection.commit()
+        if department is None:
+            return False
 
-    updated = cursor.rowcount > 0
+        department.name = name
 
-    connection.close()
+        session.commit()
 
-    return updated
+        return True
+
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return False
+
+    finally:
+        session.close()
 
 
 def delete_department(department_id):
-    connection = get_connection()
-    cursor = connection.cursor()
+    session = Session()
 
-    cursor.execute("""
-        DELETE FROM departments
-        WHERE id = ?
-    """, (department_id,))
+    try:
+        department = session.get(
+            Department,
+            department_id
+        )
 
-    connection.commit()
+        if department is None:
+            return False
 
-    deleted = cursor.rowcount > 0
+        session.delete(department)
+        session.commit()
 
-    connection.close()
+        return True
 
-    return deleted
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return False
+
+    finally:
+        session.close()

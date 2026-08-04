@@ -1,13 +1,17 @@
-import sqlite3
+import sqlalchemy as db
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from config.settings import DATABASE_NAME
 
-def get_connection():
-    return sqlite3.connect(DATABASE_NAME)
+engine = db.create_engine(f"sqlite:///{DATABASE_NAME}")
+Session = sessionmaker(bind=engine)
+
+class Base(DeclarativeBase):
+    pass
+
 
 def check_connection():
     try:
-        connection = get_connection()
-        connection.close()
-        return True
-    except sqlite3.Error:
+        with engine.connect():
+            return True
+    except Exception:
         return False

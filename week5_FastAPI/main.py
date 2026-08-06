@@ -1,43 +1,18 @@
 from fastapi import FastAPI
 import uvicorn
+
 from config.settings import APP_NAME, HOST, PORT, DEBUG
-from database.database import engine, Base, create_db
-from schemas.task import TaskBase
+from database.database import create_db
+from router import router
 
 app = FastAPI()
+
+app.include_router(router)
 
 
 @app.get("/")
 def home():
-    return {"message": "Hello World"}
-
-
-@app.get("/about")
-def about():
-    return {"message": "This is the about page."}
-
-@app.get("/calculator")
-def calculator(a: int, b: int):
-    return {
-        "a": a,
-        "b": b,
-        "sum": a + b,
-        "difference": a - b,
-        "product": a * b,
-        "division": a / b
-    }
-
-@app.post("/users")
-def create_user():
-    return {"message": "User created."}
-
-@app.post("/tasks")
-def create_task(task: TaskBase):
-
-    return {
-        "message": "Task received",
-        "task": task
-    }
+    return {"message": f"Welcome to {APP_NAME}"}
 
 
 def main():
